@@ -21,7 +21,10 @@ class Deal
             'data' => [
                 [
                     'Deal_Name' => $data['deal_name'],
-                    'Stage' => $data['deal_stage']
+                    'Stage' => $data['deal_stage'],
+                    'Account_Name' => [
+                        'name' => $data['account_name']
+                    ]
                 ]
             ]
         ];

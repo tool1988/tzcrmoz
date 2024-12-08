@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('ZOHO integration') }}
+            {{ __('ZOHO CRM integration') }}
         </h2>
     </x-slot>
 

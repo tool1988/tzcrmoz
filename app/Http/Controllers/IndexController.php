@@ -6,6 +6,7 @@ use App\Services\Zoho\AccessToken;
 use App\Services\Zoho\Account;
 use App\Services\Zoho\Deal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class IndexController extends Controller
 {
@@ -29,44 +30,92 @@ class IndexController extends Controller
         ]);
     }
 
-    public function createAccount(Request $request)
+    public function createAccountDeal(Request $request)
     {
-        $validated = $request->validate([
-            'account_name' => 'required|max:255',
-            'website' => 'required|max:255',
-            'phone' => 'required|max:255',
+        $validator = Validator::make($request->all(), [
+            'account_name' => 'required|max:100',
+            'website' => 'required|max:100',
+            'phone' => 'required|max:100',
+            'deal_name' => 'required|max:100',
+            'deal_stage' => 'required|max:100',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors(),
+            ], 400);
+        }
+
         try {
-            $status = $this->account->create($validated);
+            $this->account->create($request->all());
+            $status = $this->deal->create($request->all());
         } catch (\Exception $e) {
             $status = 'error';
         }
 
-        if ($status == 'success') {
-            return back()->with('success', 'Account created');
-        } else {
-            return back()->with('error', 'Error, invalid data');
+        $message = ($status == 'success') ? 'Deal and Account created' : 'Error, invalid data';
+
+        return response()->json([
+            'status' => $status,
+            'message' => $message,
+        ], 200);
+    }
+
+    public function createAccount(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'account_name' => 'required|max:100',
+            'website' => 'required|max:100',
+            'phone' => 'required|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors(),
+            ], 400);
         }
+
+        try {
+            $status = $this->account->create($request->all());
+        } catch (\Exception $e) {
+            $status = 'error';
+        }
+
+        $message = ($status == 'success') ? 'Account created' : 'Error, invalid data';
+
+        return response()->json([
+            'status' => $status,
+            'message' => $message,
+        ], 200);
     }
 
     public function createDeal(Request $request)
     {
-        $validated = $request->validate([
-            'deal_name' => 'required|max:255',
-            'deal_stage' => 'required|max:255',
+        $validator = Validator::make($request->all(), [
+            'deal_name' => 'required|max:100',
+            'deal_stage' => 'required|max:100',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors(),
+            ], 400);
+        }
+
         try {
-            $status = $this->deal->create($validated);
+            $status = $this->deal->create($request->all());
         } catch (\Exception $e) {
             $status = 'error';
         }
 
-        if ($status == 'success') {
-            return back()->with('success', 'Deal created');
-        } else {
-            return back()->with('error', 'Error, invalid data');
-        }
+        $message = ($status == 'success') ? 'Deal created' : 'Error, invalid data';
+
+        return response()->json([
+            'status' => $status,
+            'message' => $message,
+        ], 200);
     }
 }
