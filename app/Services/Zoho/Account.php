@@ -1,40 +1,30 @@
 <?php
 declare(strict_types=1);
 namespace App\Services\Zoho;
+use com\zoho\crm\api\record\RecordOperations;
+use com\zoho\crm\api\record\Record;
+use com\zoho\crm\api\record\BodyWrapper;
 
-use Illuminate\Support\Facades\Http;
-use App\Services\Zoho\AccessToken;
-
-class Account
+class Account extends Service
 {
-    const API_URL = 'https://www.zohoapis.eu/crm/v2/Accounts';
-
-    public function __construct(
-        private AccessToken $accessToken
-    ) {
-    }
-
     public function create($data)
     {
-        $accessToken = $this->accessToken->get();
-        $data = [
-            'data' => [
-                [
-                    'Account_Name' => $data['account_name'],
-                    'Website' => $data['website'],
-                    'Phone' => $data['phone']
-                ]
-            ]
-        ];
+        $recordOperations = new RecordOperations();
+        $account = new Record();
+        $account->addKeyValue('Account_Name', $data['account_name']);
+        $account->addKeyValue('Phone', $data['phone']);
+        $account->addKeyValue('Website', $data['website']);
+        $bodyWrapper = new BodyWrapper();
+        $bodyWrapper->setData([$account]);
+         try {
+             $response = $recordOperations->createRecords('Accounts', $bodyWrapper);
+             $statusCode = $response->getStatusCode();
+             if ($statusCode == 201) {
+                  $data = $response->getObject()->getData();
+                  return $data[0]->getStatus()->getValue();
+            }
+         } catch (\Exception $e) {}
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Zoho-oauthtoken ' . $accessToken,
-            'Content-Type' => 'application/json',
-        ])->post(self::API_URL, $data);
-
-        $result = $response->json();
-
-        return $result['data'][0]['status'];
-
+        return 'error';
     }
 }

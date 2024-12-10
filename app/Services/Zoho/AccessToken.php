@@ -91,4 +91,9 @@ class AccessToken
 
         return $accessToken;
     }
+
+    public function getRefreshToken()
+    {
+        return Cache::get('zoho_refresh_token');
+    }
 }

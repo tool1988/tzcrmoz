@@ -2,41 +2,30 @@
 declare(strict_types=1);
 namespace App\Services\Zoho;
 
-use Illuminate\Support\Facades\Http;
-use App\Services\Zoho\AccessToken;
-
+use com\zoho\crm\api\record\RecordOperations;
+use com\zoho\crm\api\record\Record;
+use com\zoho\crm\api\record\BodyWrapper;
 class Deal
 {
-    const API_URL = 'https://www.zohoapis.eu/crm/v2/Deals';
-
-    public function __construct(
-        private AccessToken $accessToken
-    ) {
-    }
-
     public function create($data)
     {
-        $accessToken = $this->accessToken->get();
-        $data = [
-            'data' => [
-                [
-                    'Deal_Name' => $data['deal_name'],
-                    'Stage' => $data['deal_stage'],
-                    'Account_Name' => [
-                        'name' => $data['account_name']
-                    ]
-                ]
-            ]
-        ];
+        $recordOperations = new RecordOperations();
+        $deal = new Record();
+        $deal->addKeyValue('Deal_Name', $data['deal_name']);
+        $deal->addKeyValue('Stage', $data['deal_stage']);
+        $deal->addKeyValue('Account_Name', $data['account_name']);
+        $bodyWrapper = new BodyWrapper();
+        $bodyWrapper->setData([$deal]);
+        try {
+            $response = $recordOperations->createRecords('Deals', $bodyWrapper);
+            $statusCode = $response->getStatusCode();
+            if ($statusCode == 201) {
+                $data = $response->getObject()->getData();
+                return $data[0]->getStatus()->getValue();
+            }
+        } catch (\Exception $e) {}
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Zoho-oauthtoken ' . $accessToken,
-            'Content-Type' => 'application/json',
-        ])->post(self::API_URL, $data);
-
-        $result = $response->json();
-
-        return $result['data'][0]['status'];
+        return 'error';
 
     }
 }
